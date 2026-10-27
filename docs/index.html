@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>LinkMAX — Clean & simple link manager for Windows</title>
+  <meta name="description" content="LinkMAX is a free, clean link manager for Windows 10/11. Organize links into categories, open them with one click, and capture any URL from anywhere with Ctrl+Shift+L. Your data stays on your PC.">
+  <meta property="og:title" content="LinkMAX — Clean & simple link manager for Windows">
+  <meta property="og:description" content="Organize links into categories, open them with one click, and capture any URL from anywhere with Ctrl+Shift+L. Free & open source.">
+  <meta property="og:image" content="icon-256.png">
+  <link rel="icon" type="image/png" href="icon-32.png">
+  <style>
+    :root {
+      --bg: #FFFFFF;
+      --bg-soft: #F6F8FA;
+      --surface: #FFFFFF;
+      --border: #E5E9F0;
+      --text: #101828;
+      --text-2: #475467;
+      --muted: #98A2B3;
+      --accent: #8B5CF6;
+      --accent-strong: #7442E8;
+      --accent-soft: #F1EAFE;
+      --dark: #101828;
+      --kbd-bg: #FFFFFF;
+    }
+    html[data-theme="dark"] {
+      --bg: #12161C;
+      --bg-soft: #171D25;
+      --surface: #1B222B;
+      --border: #2C3540;
+      --text: #F0F4F8;
+      --text-2: #B6C1CC;
+      --muted: #7C8896;
+      --accent: #9B79FF;
+      --accent-strong: #AE93FF;
+      --accent-soft: #242F45;
+      --dark: #0C1015;
+      --kbd-bg: #242D38;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: "Segoe UI Variable Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      font-size: 16px;
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    .container { max-width: 1080px; margin: 0 auto; padding: 0 24px; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { color: var(--accent-strong); }
+
+    /* ---------- Nav ---------- */
+    .nav {
+      position: sticky; top: 0; z-index: 50;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav-inner { display: flex; align-items: center; gap: 24px; height: 64px; }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 18px; color: var(--text); }
+    .brand img { width: 28px; height: 28px; border-radius: 8px; }
+    .nav-links { display: flex; gap: 22px; margin-left: 8px; }
+    .nav-links a { color: var(--text-2); font-weight: 500; font-size: 14.5px; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-right { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+    .icon-btn {
+      width: 36px; height: 36px; display: grid; place-items: center;
+      border: 1px solid var(--border); border-radius: 9px;
+      background: var(--surface); color: var(--text-2); cursor: pointer;
+    }
+    .icon-btn:hover { background: var(--bg-soft); color: var(--text); }
+    .gh-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      height: 36px; padding: 0 14px; border-radius: 9px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); font-weight: 600; font-size: 14px;
+    }
+    .gh-btn:hover { background: var(--bg-soft); color: var(--text); }
+
+    /* ---------- Hero ---------- */
+    .hero { text-align: center; padding: 72px 0 40px; }
+    .hero-icon {
+      width: 96px; height: 96px; border-radius: 24px;
+      box-shadow: 0 12px 32px rgba(139, 92, 246, 0.28);
+      margin-bottom: 22px;
+    }
+    .hero h1 { font-size: 44px; line-height: 1.15; letter-spacing: -0.5px; margin-bottom: 16px; }
+    .hero h1 .accent { color: var(--accent); }
+    .hero .sub {
+      max-width: 640px; margin: 0 auto 28px;
+      color: var(--text-2); font-size: 18px;
+    }
+    .cta { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 14px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 10px;
+      height: 50px; padding: 0 26px; border-radius: 12px;
+      background: var(--accent); color: #fff; font-weight: 700; font-size: 16px;
+      box-shadow: 0 6px 18px rgba(139, 92, 246, 0.32);
+    }
+    .btn-primary:hover { background: var(--accent-strong); color: #fff; }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 10px;
+      height: 50px; padding: 0 22px; border-radius: 12px;
+      border: 1px solid var(--border); background: var(--surface);
+      color: var(--text); font-weight: 600; font-size: 15px;
+    }
+    .btn-ghost:hover { background: var(--bg-soft); color: var(--text); }
+    .hero .meta { color: var(--muted); font-size: 13.5px; }
+
+    /* ---------- App window mockup ---------- */
+    .window-wrap { position: relative; max-width: 820px; margin: 48px auto 0; }
+    .window {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: 0 24px 60px rgba(16, 24, 40, 0.14);
+      overflow: hidden;
+      text-align: left;
+    }
+    .titlebar {
+      height: 42px; display: flex; align-items: center; padding: 0 14px;
+      border-bottom: 1px solid var(--border); background: var(--surface);
+    }
+    .titlebar .win-name { font-size: 12.5px; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+    .titlebar .win-name img { width: 16px; height: 16px; border-radius: 4px; }
+    .win-controls { margin-left: auto; display: flex; gap: 16px; color: var(--muted); font-size: 11px; }
+    .app-body { display: grid; grid-template-columns: 172px 1fr; min-height: 380px; }
+    .app-side { background: var(--surface); border-right: 1px solid var(--border); padding: 12px 10px; }
+    .app-nav-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 7px 10px; border-radius: 8px; font-size: 12.5px; color: var(--text-2);
+    }
+    .app-nav-item.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+    .app-nav-label {
+      font-size: 10px; font-weight: 700; letter-spacing: 0.6px; text-transform: uppercase;
+      color: var(--muted); padding: 12px 10px 6px;
+    }
+    .dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+    .app-nav-count { margin-left: auto; font-size: 11px; color: var(--muted); }
+    .app-main { background: var(--bg-soft); padding: 14px 16px; }
+    .app-toolbar { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+    .app-search {
+      flex: 1; max-width: 220px; height: 30px; border: 1px solid var(--border);
+      border-radius: 8px; background: var(--surface);
+      font-size: 11.5px; color: var(--muted); display: flex; align-items: center; padding: 0 10px;
+    }
+    .app-addbtn {
+      margin-left: auto; height: 30px; padding: 0 12px; border-radius: 8px;
+      background: var(--accent); color: #fff; font-size: 11.5px; font-weight: 600;
+      display: flex; align-items: center; gap: 6px;
+    }
+    .app-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .app-card {
+      position: relative; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 10px; padding: 12px; box-shadow: 0 1px 2px rgba(16,24,40,0.05);
+    }
+    .app-card.pinned { box-shadow: inset 3px 0 0 var(--accent), 0 1px 2px rgba(16,24,40,0.05); }
+    .fav {
+      width: 30px; height: 30px; border-radius: 8px; color: #fff;
+      display: grid; place-items: center; font-weight: 700; font-size: 13px;
+    }
+    .app-card .name { margin-top: 8px; font-size: 12px; font-weight: 600; }
+    .app-card .url { font-size: 10.5px; color: var(--muted); }
+    .capture-toast {
+      position: absolute; right: -14px; bottom: 26px;
+      background: var(--dark); color: #fff;
+      padding: 10px 16px; border-radius: 12px;
+      font-size: 12.5px; font-weight: 500;
+      box-shadow: 0 12px 32px rgba(16, 24, 40, 0.35);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .capture-toast .check {
+      width: 18px; height: 18px; border-radius: 50%; background: #22C55E;
+      display: grid; place-items: center; font-size: 10px; flex: none;
+    }
+
+    /* ---------- Sections ---------- */
+    section { padding: 72px 0; scroll-margin-top: 64px; }
+    .sec-head { text-align: center; max-width: 620px; margin: 0 auto 44px; }
+    .sec-head h2 { font-size: 30px; letter-spacing: -0.3px; margin-bottom: 10px; }
+    .sec-head p { color: var(--text-2); }
+    .soft { background: var(--bg-soft); }
+
+    .features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .feature {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 22px;
+    }
+    .feature .fico {
+      width: 40px; height: 40px; border-radius: 11px;
+      background: var(--accent-soft); color: var(--accent);
+      display: grid; place-items: center; margin-bottom: 14px;
+    }
+    .feature h3 { font-size: 16px; margin-bottom: 6px; }
+    .feature p { font-size: 14px; color: var(--text-2); }
+
+    /* ---------- Quick capture (dark) ---------- */
+    .capture { background: var(--dark); color: #F0F4F8; }
+    .capture .sec-head p { color: #B6C1CC; }
+    .capture h2 { color: #F0F4F8; }
+    .capture-inner { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: center; }
+    .keys { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 20px 0 8px; }
+    .kbd {
+      background: var(--kbd-bg); color: #F0F4F8;
+      border: 1px solid #3D4956; border-bottom-width: 3px;
+      border-radius: 10px; padding: 12px 20px;
+      font-family: "Segoe UI", sans-serif; font-size: 19px; font-weight: 700;
+      box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+    }
+    .kbd.accent { background: var(--accent); border-color: var(--accent-strong); }
+    .plus { color: #7C8896; font-size: 18px; font-weight: 600; }
+    .steps { display: flex; flex-direction: column; gap: 18px; }
+    .step { display: flex; gap: 14px; }
+    .step-num {
+      width: 30px; height: 30px; border-radius: 50%; flex: none;
+      background: var(--accent); color: #fff; font-weight: 700; font-size: 14px;
+      display: grid; place-items: center;
+    }
+    .step strong { display: block; font-size: 15.5px; margin-bottom: 2px; }
+    .step p { font-size: 14px; color: #B6C1CC; }
+
+    /* ---------- Import/export ---------- */
+    .io-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .io-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 14px; padding: 26px;
+    }
+    .io-card h3 { font-size: 17px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px; }
+    .io-card p { font-size: 14.5px; color: var(--text-2); }
+    .io-card .tag {
+      display: inline-block; margin-top: 12px; padding: 3px 10px; border-radius: 99px;
+      background: var(--accent-soft); color: var(--accent);
+      font-size: 12px; font-weight: 600;
+    }
+
+    /* ---------- FAQ ---------- */
+    .faq { max-width: 720px; margin: 0 auto; }
+    details {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 12px; padding: 16px 20px; margin-bottom: 10px;
+    }
+    details summary {
+      cursor: pointer; font-weight: 600; font-size: 15px; list-style: none;
+      display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    }
+    details summary::after { content: "+"; color: var(--muted); font-size: 20px; line-height: 1; }
+    details[open] summary::after { content: "–"; }
+    details p { margin-top: 10px; font-size: 14.5px; color: var(--text-2); }
+    details code {
+      background: var(--bg-soft); border: 1px solid var(--border);
+      padding: 1px 6px; border-radius: 6px; font-size: 13px;
+    }
+
+    /* ---------- Footer ---------- */
+    footer { border-top: 1px solid var(--border); padding: 34px 0; background: var(--bg); }
+    .foot-inner {
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+      color: var(--muted); font-size: 13.5px;
+    }
+    .foot-inner .brand { font-size: 15px; gap: 8px; }
+    .foot-inner .brand img { width: 20px; height: 20px; border-radius: 6px; }
+    .foot-links { margin-left: auto; display: flex; gap: 18px; }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 860px) {
+      .features { grid-template-columns: 1fr 1fr; }
+      .capture-inner, .io-grid { grid-template-columns: 1fr; }
+      .nav-links { display: none; }
+      .hero h1 { font-size: 32px; }
+      .app-grid { grid-template-columns: repeat(2, 1fr); }
+      .capture-toast { right: 6px; }
+    }
+    @media (max-width: 560px) {
+      .features { grid-template-columns: 1fr; }
+      .app-side { display: none; }
+      .app-body { grid-template-columns: 1fr; }
+      section { padding: 52px 0; }
+    }
+  </style>
+</head>
+<body>
+  <header class="nav">
+    <div class="container nav-inner">
+      <a class="brand" href="#"><img src="icon-32.png" alt="LinkMAX">LinkMAX</a>
+      <nav class="nav-links">
+        <a href="#features">Features</a>
+        <a href="#capture">Quick Capture</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+      <div class="nav-right">
+        <button class="icon-btn" id="themeToggle" aria-label="Toggle dark mode"></button>
+        <a class="gh-btn" href="https://github.com/whwgywgr/LinkMAX" target="_blank" rel="noopener">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.55v-2.17c-3.2.7-3.87-1.36-3.87-1.36-.52-1.33-1.28-1.68-1.28-1.68-1.04-.71.08-.7.08-.7 1.15.08 1.76 1.19 1.76 1.19 1.03 1.75 2.69 1.25 3.34.95.1-.74.4-1.25.72-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.26.45-2.28 1.19-3.09-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.17 1.18a11.1 11.1 0 0 1 5.78 0c2.2-1.49 3.16-1.18 3.16-1.18.63 1.59.24 2.76.12 3.05.74.81 1.18 1.83 1.18 3.09 0 4.41-2.69 5.38-5.25 5.67.41.35.77 1.05.77 2.12v3.14c0 .3.21.66.8.55A11.5 11.5 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5Z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <img class="hero-icon" src="icon-256.png" alt="LinkMAX mascot — a cute chain link">
+        <h1>Every link you save,<br><span class="accent">one click away.</span></h1>
+        <p class="sub">LinkMAX is a clean, simple link manager for Windows. Organize links into categories, open them in your browser with one click — and save any URL from anywhere with a single hotkey.</p>
+        <div class="cta">
+          <a class="btn-primary" href="https://github.com/whwgywgr/LinkMAX/releases/latest" target="_blank" rel="noopener">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>
+            Download for Windows
+          </a>
+          <a class="btn-ghost" href="https://github.com/whwgywgr/LinkMAX" target="_blank" rel="noopener">View source</a>
+        </div>
+        <p class="meta">Windows 10 / 11 · 64-bit · Free & open source · No account needed</p>
+
+        <div class="window-wrap">
+          <div class="window" aria-hidden="true">
+            <div class="titlebar">
+              <span class="win-name"><img src="icon-32.png" alt="">LinkMAX</span>
+              <span class="win-controls"><span>─</span><span>▢</span><span>✕</span></span>
+            </div>
+            <div class="app-body">
+              <div class="app-side">
+                <div class="app-nav-item active">All Links <span class="app-nav-count">7</span></div>
+                <div class="app-nav-label">Categories</div>
+                <div class="app-nav-item"><span class="dot" style="background:#8B5CF6"></span>Development <span class="app-nav-count">5</span></div>
+                <div class="app-nav-item"><span class="dot" style="background:#DB2777"></span>Social <span class="app-nav-count">2</span></div>
+                <div class="app-nav-item"><span class="dot" style="background:#16A34A"></span>Tools <span class="app-nav-count">0</span></div>
+              </div>
+              <div class="app-main">
+                <div class="app-toolbar">
+                  <div class="app-search">Search links...</div>
+                  <div class="app-addbtn">+ Add Link</div>
+                </div>
+                <div class="app-grid">
+                  <div class="app-card pinned">
+                    <div class="fav" style="background:#101828">G</div>
+                    <div class="name">GitHub</div>
+                    <div class="url">github.com</div>
+                  </div>
+                  <div class="app-card">
+                    <div class="fav" style="background:#8B5CF6">F</div>
+                    <div class="name">Figma</div>
+                    <div class="url">figma.com</div>
+                  </div>
+                  <div class="app-card">
+                    <div class="fav" style="background:#DB2777">D</div>
+                    <div class="name">Dribbble</div>
+                    <div class="url">dribbble.com</div>
+                  </div>
+                  <div class="app-card">
+                    <div class="fav" style="background:#EA580C">H</div>
+                    <div class="name">Hacker News</div>
+                    <div class="url">news.ycombinator.com</div>
+                  </div>
+                  <div class="app-card">
+                    <div class="fav" style="background:#0D9488">S</div>
+                    <div class="name">Stack Overflow</div>
+                    <div class="url">stackoverflow.com</div>
+                  </div>
+                  <div class="app-card">
+                    <div class="fav" style="background:#2563EB">M</div>
+                    <div class="name">MDN Web Docs</div>
+                    <div class="url">developer.mozilla.org</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="capture-toast"><span class="check">✓</span>Link saved: Figma (Uncategorized)</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="features" class="soft">
+      <div class="container">
+        <div class="sec-head">
+          <h2>Everything a link manager needs</h2>
+          <p>No bloat, no accounts, no cloud. Just a fast, tidy home for the links you use every day.</p>
+        </div>
+        <div class="features">
+          <div class="feature">
+            <div class="fico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg></div>
+            <h3>One click to open</h3>
+            <p>Every link shows its favicon, name and URL. Click a card and it opens in your default browser instantly.</p>
+          </div>
+          <div class="feature">
+            <div class="fico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a15 15 0 0 1 0 18 15 15 0 0 1 0-18z"/><path d="M3 12h18"/></svg></div>
+            <h3>Favicons, automatic</h3>
+            <p>Favicons are fetched for every site and cached locally — your grid looks right even offline.</p>
+          </div>
+          <div class="feature">
+            <div class="fico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>
+            <h3>Categories & drag & drop</h3>
+            <p>Group links with colored categories. Drag any link onto a category in the sidebar to move it.</p>
+          </div>
+          <div class="feature">
+            <div class="fico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="3" width="7.5" height="7.5" rx="1.5"/><rect x="3" y="13.5" width="7.5" height="7.5" rx="1.5"/><rect x="13.5" y="13.5" width="7.5" height="7.5" rx="1.5"/></svg></div>
+            <h3>Grid or list, sorted your way</h3>
+            <p>Switch layouts anytime. Sort A→Z, Z→A, newest or oldest — and pin favorites to the top.</p>
+          </div>
+          <div class="feature">
+            <div class="fico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg></div>
+            <h3>Light & dark mode</h3>
+            <p>One toggle switches the whole app — the Windows title bar follows your theme. Your choice is remembered.</p>
+          </div>
+          <div class="feature">
+            <div class="fico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg></div>
+            <h3>Import & export</h3>
+            <p>Import JSON backups or HTML bookmarks from Chrome, Edge and Firefox. Export back anytime.</p>
+          </div>
+          <div class="feature">
+            <div class="fico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6"/><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg></div>
+            <h3>System tray & auto-backup</h3>
+            <p>LinkMAX lives in your tray while you work. Every quit makes a backup — the last 5 are kept.</p>
+          </div>
+          <div class="feature">
+            <div class="fico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <h3>Private by design</h3>
+            <p>Everything is stored in a local JSON file on your PC. No account, no sync, no tracking.</p>
+          </div>
+          <div class="feature">
+            <div class="fico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg></div>
+            <h3>Duplicate-safe</h3>
+            <p>Adding a URL you already saved shows a friendly warning — Quick Capture quietly skips copies too.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="capture" class="capture">
+      <div class="container">
+        <div class="sec-head">
+          <h2>Save links without even opening the app</h2>
+          <p>Quick Capture is the fastest way to build your collection — it works system-wide, even while LinkMAX sits in the tray.</p>
+        </div>
+        <div class="capture-inner">
+          <div class="keys" aria-label="Ctrl Shift L">
+            <span class="kbd">Ctrl</span><span class="plus">+</span><span class="kbd">Shift</span><span class="plus">+</span><span class="kbd accent">L</span>
+          </div>
+          <div class="steps">
+            <div class="step">
+              <div class="step-num">1</div>
+              <div><strong>Copy any URL</strong><p>From your browser, a chat message, a document — anywhere.</p></div>
+            </div>
+            <div class="step">
+              <div class="step-num">2</div>
+              <div><strong>Press the hotkey</strong><p>Ctrl+Shift+L works globally on Windows, even when the app is closed to the tray.</p></div>
+            </div>
+            <div class="step">
+              <div class="step-num">3</div>
+              <div><strong>Done — link saved</strong><p>LinkMAX names it from the domain, checks for duplicates and shows a notification.</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="container">
+        <div class="sec-head">
+          <h2>Your links belong to you</h2>
+          <p>Bring them in from any browser, take them out in any format — all stored in a plain JSON file on your PC.</p>
+        </div>
+        <div class="io-grid">
+          <div class="io-card">
+            <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/><path d="M12 15V3"/></svg>Import</h3>
+            <p>Coming from another tool? Import a LinkMAX JSON backup, or export bookmarks from Chrome, Edge or Firefox as HTML — LinkMAX turns every folder into a category and keeps the structure.</p>
+            <span class="tag">Merge or replace, your choice</span>
+          </div>
+          <div class="io-card">
+            <h3><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m17 8-5-5-5 5"/><path d="M12 3v12"/></svg>Export</h3>
+            <p>Export a full JSON backup with categories, or standard HTML bookmarks that any browser can import. Plus an automatic backup on every quit, just in case.</p>
+            <span class="tag">JSON · HTML bookmarks · auto-backup</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="faq" class="soft">
+      <div class="container">
+        <div class="sec-head">
+          <h2>Questions, answered</h2>
+        </div>
+        <div class="faq">
+          <details>
+            <summary>Is LinkMAX free?</summary>
+            <p>Yes — completely free and open source under the MIT license. No ads, no accounts, no upsells.</p>
+          </details>
+          <details>
+            <summary>Does my data leave my PC?</summary>
+            <p>No. Links and settings live in a single JSON file at <code>%APPDATA%\LinkMAX\linkmax-data.json</code>. Favicons are downloaded from public favicon services and cached locally. Nothing else is sent anywhere.</p>
+          </details>
+          <details>
+            <summary>How do I move my bookmarks from my browser?</summary>
+            <p>In Chrome/Edge: Bookmark manager → Export bookmarks (HTML). In LinkMAX: Import → pick that file → choose Merge or Replace. Every bookmark folder becomes a category.</p>
+          </details>
+          <details>
+            <summary>Ctrl+Shift+L doesn't do anything — why?</summary>
+            <p>Another app on your PC may own that key combo. LinkMAX automatically falls back to <code>Ctrl+Alt+L</code>, then <code>Ctrl+Shift+K</code> — the active one is shown in the tray tooltip and in the Add Link dialog. Every capture attempt is logged to <code>%APPDATA%\LinkMAX\linkmax-log.txt</code> if you need to troubleshoot.</p>
+          </details>
+          <details>
+            <summary>Where are my backups?</summary>
+            <p>Every time you quit LinkMAX, a copy of your data is written to <code>%APPDATA%\LinkMAX\backups</code>. The last 5 are kept — restore by copying one back over <code>linkmax-data.json</code>.</p>
+          </details>
+          <details>
+            <summary>Does it work offline?</summary>
+            <p>Fully. Favicons are cached on disk, so even your grid looks right without internet. Only the initial favicon fetch needs a connection.</p>
+          </details>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container foot-inner">
+      <span class="brand"><img src="icon-32.png" alt="">LinkMAX</span>
+      <span>© 2026 LinkMAX · MIT License · Made for Windows</span>
+      <div class="foot-links">
+        <a href="https://github.com/whwgywgr/LinkMAX" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/whwgywgr/LinkMAX/releases/latest" target="_blank" rel="noopener">Download</a>
+        <a href="https://github.com/whwgywgr/LinkMAX/issues" target="_blank" rel="noopener">Issues</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    (function () {
+      var root = document.documentElement;
+      var saved = null;
+      try { saved = localStorage.getItem('linkmax-site-theme'); } catch (e) {}
+      var dark = saved ? saved === 'dark' : window.matchMedia('(prefers-color-scheme: dark)').matches;
+      var moon = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+      var sun = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>';
+      var btn = document.getElementById('themeToggle');
+      function apply() {
+        root.dataset.theme = dark ? 'dark' : 'light';
+        btn.innerHTML = dark ? sun : moon;
+      }
+      btn.addEventListener('click', function () {
+        dark = !dark;
+        apply();
+        try { localStorage.setItem('linkmax-site-theme', dark ? 'dark' : 'light'); } catch (e) {}
+      });
+      apply();
+    })();
+  </script>
+</body>
+</html>
