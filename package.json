@@ -1,0 +1,50 @@
+{
+  "name": "linkmax",
+  "productName": "LinkMAX",
+  "version": "1.1.1",
+  "description": "LinkMAX - clean and simple link manager for Windows",
+  "main": "main.js",
+  "author": "LinkMAX",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "icon": "node scripts/make-icon.js",
+    "dist": "electron-builder --win nsis"
+  },
+  "build": {
+    "appId": "com.linkmax.app",
+    "productName": "LinkMAX",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "renderer/**/*",
+      "build/icon.ico"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LinkMAX"
+    }
+  },
+  "devDependencies": {
+    "electron": "^45.0.0",
+    "electron-builder": "^26.18.0",
+    "png-to-ico": "^3.0.2",
+    "sharp": "^0.35.5"
+  }
+}

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' file: data: https:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+  <title>LinkMAX</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div id="app">
+    <!-- ============ Sidebar ============ -->
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo" id="brandLogo"></div>
+        <span class="brand-name">LinkMAX</span>
+      </div>
+
+      <nav class="nav" id="nav">
+        <button class="nav-item" id="navAll" data-cat="all">
+          <span class="nav-ico" id="allIco"></span>
+          <span class="grow">All Links</span>
+          <span class="nav-count" id="navAllCount">0</span>
+        </button>
+
+        <div class="nav-label">Categories</div>
+        <div id="categoryList" class="cat-list"></div>
+        <div id="navNoneWrap" hidden>
+          <button class="nav-item" data-cat="none">
+            <span class="nav-ico" id="noneIco"></span>
+            <span class="grow">Uncategorized</span>
+            <span class="nav-count" id="navNoneCount">0</span>
+          </button>
+        </div>
+
+        <button class="nav-add" id="addCategoryBtn">
+          <span class="nav-ico" id="plusIco"></span>
+          New Category
+        </button>
+      </nav>
+
+      <div class="sidebar-footer">
+        <button class="btn footer-btn" id="importBtn" title="Import from JSON or HTML bookmarks">
+          <span data-ico="import"></span> Import
+        </button>
+        <div class="export-wrap">
+          <button class="btn footer-btn" id="exportBtn" title="Export links to JSON or HTML bookmarks">
+            <span data-ico="export"></span> Export
+          </button>
+          <div class="menu-pop export-menu" id="exportMenu" hidden>
+            <button class="menu-item" data-export="json">
+              <span class="menu-ico" data-ico="json"></span>
+              <span><strong>JSON file</strong><small>Full backup with categories</small></span>
+            </button>
+            <button class="menu-item" data-export="html">
+              <span class="menu-ico" data-ico="html"></span>
+              <span><strong>HTML bookmarks</strong><small>Import into any browser</small></span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ============ Main ============ -->
+    <main class="main">
+      <div class="main-top"></div>
+
+      <div class="toolbar">
+        <div class="search">
+          <span class="search-ico" id="searchIco"></span>
+          <input type="text" id="searchInput" placeholder="Search links..." autocomplete="off" spellcheck="false">
+        </div>
+        <div class="spacer"></div>
+        <select class="input sort-select" id="sortSelect" title="Sort links">
+          <option value="name">Name A→Z</option>
+          <option value="nameDesc">Name Z→A</option>
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+        </select>
+        <div class="segmented" id="viewToggle" role="group" aria-label="View mode">
+          <button class="seg-btn" data-view="grid" title="Grid view"><span data-ico="grid"></span></button>
+          <button class="seg-btn" data-view="list" title="List view"><span data-ico="list"></span></button>
+        </div>
+        <button class="btn btn-icon" id="themeToggle" title="Toggle dark mode" aria-label="Toggle dark mode"></button>
+        <button class="btn btn-primary" id="addLinkBtn"><span data-ico="plus"></span> Add Link</button>
+      </div>
+
+      <div class="content" id="content">
+        <div class="content-header">
+          <h1 id="listTitle">All Links</h1>
+          <span class="count-chip" id="listCount">0 links</span>
+        </div>
+        <div id="linkContainer"></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============ Link modal ============ -->
+  <div class="modal-backdrop" id="modalLink" hidden>
+    <form class="modal" id="linkForm" novalidate>
+      <h2 id="linkModalTitle">Add Link</h2>
+      <p class="sub" id="linkModalSub">Save a link so you can open it anytime.</p>
+
+      <div class="field">
+        <label for="linkUrl">URL</label>
+        <input class="input" type="text" id="linkUrl" placeholder="https://example.com" autocomplete="off" spellcheck="false">
+        <div class="dup-warn" id="linkDupWarn" hidden></div>
+      </div>
+
+      <div class="field">
+        <label for="linkName">Name</label>
+        <input class="input" type="text" id="linkName" placeholder="My Link" autocomplete="off" spellcheck="false">
+        <small class="hint">Leave empty to use the website name.</small>
+      </div>
+
+      <div class="field">
+        <label for="linkCategory">Category</label>
+        <select class="input" id="linkCategory"></select>
+        <small class="hint" id="quickCaptureHint" hidden></small>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="submit" class="btn btn-primary" id="linkSaveBtn">Add Link</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============ Category modal ============ -->
+  <div class="modal-backdrop" id="modalCategory" hidden>
+    <form class="modal" id="categoryForm" novalidate>
+      <h2 id="categoryModalTitle">New Category</h2>
+      <p class="sub">Group related links together.</p>
+
+      <div class="field">
+        <label for="categoryName">Name</label>
+        <input class="input" type="text" id="categoryName" placeholder="e.g. Development" autocomplete="off" spellcheck="false">
+      </div>
+
+      <div class="modal-actions spread">
+        <button type="button" class="btn btn-danger-ghost" id="deleteCategoryBtn" hidden>Delete Category</button>
+        <div class="row-gap">
+          <button type="button" class="btn" data-close>Cancel</button>
+          <button type="submit" class="btn btn-primary" id="categorySaveBtn">Create</button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  <!-- ============ Import modal ============ -->
+  <div class="modal-backdrop" id="modalImport" hidden>
+    <div class="modal">
+      <h2>Import Links</h2>
+      <p class="sub" id="importSummary">Found links in file.</p>
+
+      <div class="radio-row">
+        <label class="radio">
+          <input type="radio" name="importMode" value="merge" checked>
+          <span><strong>Merge</strong><small>Keep current links and add the new ones</small></span>
+        </label>
+        <label class="radio">
+          <input type="radio" name="importMode" value="replace">
+          <span><strong>Replace all</strong><small>Remove current links, then import</small></span>
+        </label>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="button" class="btn btn-primary" id="importConfirmBtn">Import</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Confirm modal ============ -->
+  <div class="modal-backdrop" id="modalConfirm" hidden>
+    <div class="modal modal-sm">
+      <h2 id="confirmTitle">Are you sure?</h2>
+      <p class="sub" id="confirmMessage"></p>
+      <div class="modal-actions">
+        <button type="button" class="btn" data-close>Cancel</button>
+        <button type="button" class="btn btn-danger" id="confirmBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Floating layers ============ -->
+  <div class="menu-pop ctx-menu" id="ctxMenu" hidden></div>
+  <div id="toasts"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
