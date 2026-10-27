@@ -2,6 +2,8 @@
 
 Clean and simple link manager for **Windows 10/11**. Save your favorite links, organize them into categories, and open them in your browser with one click.
 
+**Website:** https://whwgywgr.github.io/LinkMAX/ · **Download:** [latest release](https://github.com/whwgywgr/LinkMAX/releases/latest)
+
 ![LinkMAX](build/icon-256.png)
 
 ## Features
