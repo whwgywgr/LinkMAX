@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import 'backups_screen.dart';
 import 'categories_screen.dart';
 import 'favicon.dart';
 import 'import_export.dart';
@@ -9,10 +10,13 @@ import 'link_sheet.dart';
 import 'models.dart';
 import 'store.dart';
 
+const MethodChannel _shareChannel = MethodChannel('com.linkmax.app/share');
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final store = LinkStore();
   await store.load();
+  await store.autoBackup();
   for (final link in store.links) {
     FaviconCache.warm(store, link);
   }
@@ -97,6 +101,33 @@ class _HomeScreenState extends State<HomeScreen> {
   final _searchController = TextEditingController();
 
   LinkStore get store => widget.store;
+
+  @override
+  void initState() {
+    super.initState();
+    _shareChannel.setMethodCallHandler((call) async {
+      if (call.method == 'onShareReceived') {
+        _handleSharedText(call.arguments as String?);
+      }
+    });
+    _shareChannel.invokeMethod<String>('getInitialShare').then((shared) {
+      if (shared != null && shared.isNotEmpty) _handleSharedText(shared);
+    }).catchError((_) {});
+  }
+
+  void _handleSharedText(String? text) {
+    if (text == null || text.isEmpty) return;
+    final url = extractUrl(text);
+    if (url == null) {
+      _snack('No link found in the shared text');
+      return;
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Navigator.of(context).popUntil((r) => r.isFirst);
+      showLinkSheet(context, store, initialUrl: url);
+    });
+  }
 
   void _resetCatIfGone() {
     if (_cat != 'all' && _cat != 'none' && store.categoryById(_cat) == null) {
@@ -348,6 +379,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 await Navigator.push(context,
                     MaterialPageRoute(builder: (_) => CategoriesScreen(store: store)));
                 setState(_resetCatIfGone);
+              } else if (v == 'backups') {
+                await Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => BackupsScreen(store: store)));
               } else if (v == 'import') {
                 await runImportFlow(context, store);
               } else if (v == 'exportJson') {
@@ -364,6 +398,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 contentPadding: EdgeInsets.zero,
                 leading: Icon(Icons.folder_open),
                 title: Text('Manage categories'),
+              )),
+              PopupMenuItem(value: 'backups', child: ListTile(
+                dense: true,
+                contentPadding: EdgeInsets.zero,
+                leading: Icon(Icons.history),
+                title: Text('Backups & restore'),
               )),
               PopupMenuItem(value: 'import', child: ListTile(
                 dense: true,

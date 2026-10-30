@@ -8,19 +8,22 @@ Future<void> showLinkSheet(
   BuildContext context,
   LinkStore store, {
   LinkItem? existing,
+  String? initialUrl,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (sheetCtx) => _LinkSheet(store: store, existing: existing),
+    builder: (sheetCtx) =>
+        _LinkSheet(store: store, existing: existing, initialUrl: initialUrl),
   );
 }
 
 class _LinkSheet extends StatefulWidget {
   final LinkStore store;
   final LinkItem? existing;
-  const _LinkSheet({required this.store, this.existing});
+  final String? initialUrl;
+  const _LinkSheet({required this.store, this.existing, this.initialUrl});
 
   @override
   State<_LinkSheet> createState() => _LinkSheetState();
@@ -36,7 +39,8 @@ class _LinkSheetState extends State<_LinkSheet> {
   void initState() {
     super.initState();
     final e = widget.existing;
-    _url = TextEditingController(text: e?.url ?? '');
+    _url = TextEditingController(
+        text: e?.url ?? normalizeUrl(widget.initialUrl ?? ''));
     _name = TextEditingController(text: e?.name ?? '');
     _categoryId = e?.categoryId;
     _checkDuplicate();

@@ -303,6 +303,92 @@ class LinkStore extends ChangeNotifier {
     notifyListeners();
   }
 
+  // ---------- backups ----------
+
+  static const maxBackups = 5;
+
+  Future<String> backupNow() async {
+    final file = await dataFile;
+    if (!await file.exists()) return 'Nothing to back up yet';
+    final dir = await _backupDir();
+    final stamp =
+        DateTime.now().toIso8601String().replaceAll(':', '-').substring(0, 19);
+    await file.copy('${dir.path}/linkmax-backup-$stamp.json');
+    await _pruneBackups(dir);
+    return 'Backup created';
+  }
+
+  /// Mirrors the desktop app: one automatic backup per day on launch.
+  Future<void> autoBackup() async {
+    try {
+      final dir = await _backupDir();
+      final marker = File('${dir.path}/.last-auto-backup');
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      if (await marker.exists() &&
+          (await marker.readAsString()).trim() == today) {
+        return;
+      }
+      final msg = await backupNow();
+      if (msg == 'Backup created') await marker.writeAsString(today);
+    } catch (_) {}
+  }
+
+  Future<void> _pruneBackups(Directory dir) async {
+    final backups = (await dir.list().toList())
+        .whereType<File>()
+        .where((f) => f.uri.pathSegments.last.startsWith('linkmax-backup-'))
+        .toList()
+      ..sort((a, b) => a.path.compareTo(b.path));
+    while (backups.length > maxBackups) {
+      try {
+        await backups.first.delete();
+      } catch (_) {}
+      backups.removeAt(0);
+    }
+  }
+
+  Future<List<BackupInfo>> listBackups() async {
+    try {
+      final dir = await _backupDir();
+      final out = <BackupInfo>[];
+      await for (final entity in dir.list()) {
+        if (entity is! File) continue;
+        final name = entity.uri.pathSegments.last;
+        if (!name.startsWith('linkmax-backup-')) continue;
+        final stat = await entity.stat();
+        out.add(BackupInfo(name, stat.modified, stat.size));
+      }
+      out.sort((a, b) => b.modified.compareTo(a.modified));
+      return out;
+    } catch (_) {
+      return [];
+    }
+  }
+
+  /// Restores a backup file, replacing current data. Returns error message or null.
+  Future<String?> restoreBackup(String fileName) async {
+    try {
+      final dir = await _backupDir();
+      final file = File('${dir.path}/$fileName');
+      if (!await file.exists()) return 'Backup file not found';
+      final data = jsonDecode(await file.readAsString()) as Map<String, dynamic>;
+      _adopt(data);
+      await _persist();
+      notifyListeners();
+      return null;
+    } catch (_) {
+      return 'This backup could not be restored';
+    }
+  }
+
+  Future<void> deleteBackup(String fileName) async {
+    try {
+      final dir = await _backupDir();
+      final file = File('${dir.path}/$fileName');
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
+  }
+
   // ---------- import ----------
 
   /// Returns the number of links added.
@@ -357,6 +443,34 @@ class LinkStore extends ChangeNotifier {
 }
 
 // ---------- URL helpers (same rules as the desktop app) ----------
+
+/// Pulls the first URL out of arbitrary shared text (Share to LinkMAX).
+String? extractUrl(String text) {
+  if (text.isEmpty) return null;
+  final http = RegExp("https?://[^\\s<>\"')\\]]+", caseSensitive: false)
+      .firstMatch(text);
+  if (http != null) return http.group(0);
+  final www = RegExp(
+          "(?:^|\\s)(www\\.[a-z0-9-]+(?:\\.[a-z0-9-]+)+[^\\s<>\"')\\]]*)",
+          caseSensitive: false)
+      .firstMatch(text);
+  if (www != null) return 'https://${www.group(2)}';
+  return null;
+}
+
+class BackupInfo {
+  final String fileName;
+  final DateTime modified;
+  final int sizeBytes;
+  BackupInfo(this.fileName, this.modified, this.sizeBytes);
+}
+
+Future<Directory> _backupDir() async {
+  final support = await getApplicationSupportDirectory();
+  final d = Directory('${support.path}/backups');
+  if (!await d.exists()) await d.create(recursive: true);
+  return d;
+}
 
 String normalizeUrl(String u) {
   final s = u.trim();
