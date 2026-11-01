@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'models.dart';
 
@@ -121,6 +123,36 @@ class LinkStore extends ChangeNotifier {
           'links': links.map((l) => l.toJson()).toList(),
         }),
       );
+    } catch (_) {}
+    _updateHomeWidget();
+  }
+
+  /// Feeds the home screen widget with the top links (pinned first).
+  Future<void> _updateHomeWidget() async {
+    try {
+      final top = visible(
+        categoryFilter: 'all',
+        query: '',
+        sortMode: settings.sortMode,
+      ).take(4).toList();
+      final arr = top.map((l) {
+        var name = l.name.trim();
+        if (name.isEmpty) name = hostOf(l.url);
+        final cat = categoryOf(l);
+        var colorIndex = palette.indexOf(cat?.colorValue ?? hashColor(hostOf(l.url)));
+        if (colorIndex < 0) colorIndex = 0;
+        return {
+          'name': name,
+          'url': normalizeUrl(l.url),
+          'letter': name.isEmpty ? '?' : name.substring(0, 1).toUpperCase(),
+          'colorIndex': colorIndex,
+        };
+      }).toList();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('widget_links', jsonEncode(arr));
+      await prefs.setInt('widget_count', arr.length);
+      const MethodChannel('com.linkmax.app/share')
+          .invokeMethod<void>('refreshWidget');
     } catch (_) {}
   }
 

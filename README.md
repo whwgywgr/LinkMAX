@@ -19,7 +19,8 @@ Clean and simple link manager for **Windows 10/11**. Save your favorite links, o
 - **Grid or List view** — switch layouts anytime; your choice is remembered.
 - **Dark mode** — toggle between light and dark themes with the moon/sun button in the toolbar; the choice is saved and the Windows title bar follows the theme.
 - **Search** — instantly filter links by name or URL (`Ctrl+F`).
-- **Auto-backup** — every time the app closes, the data file is copied to `%APPDATA%/LinkMAX/backups` (last 5 kept).
+- **Auto-backup** — every time the app closes, the data file is copied to `%APPDATA%/LinkMAX/backups` (last 5 kept). On Android: one automatic backup per day, manageable in-app.
+- **Home screen widget (Android)** — shows your top pinned links; tap any row to open it straight in the browser.
 - **Local storage** — data is saved automatically to a JSON file on your PC (`%APPDATA%/LinkMAX/linkmax-data.json`).
 - **Import / Export**
   - Export as **JSON** (full backup with categories) or **HTML bookmarks** (importable into Chrome, Edge, Firefox...).

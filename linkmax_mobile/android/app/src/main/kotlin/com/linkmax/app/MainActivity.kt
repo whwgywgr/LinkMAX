@@ -27,6 +27,10 @@ class MainActivity : FlutterActivity() {
                         pendingShare = null
                         result.success(text)
                     }
+                    "refreshWidget" -> {
+                        LinkMAXWidgetProvider.pushRefresh(this)
+                        result.success(true)
+                    }
                     else -> result.notImplemented()
                 }
             }
