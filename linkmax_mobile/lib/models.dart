@@ -43,6 +43,8 @@ class LinkItem {
   String? categoryId;
   String favicon; // cached file name inside the favicons dir, '' when none
   bool pinned;
+  int openCount;
+  int? lastOpenedAt;
   final int createdAt;
 
   LinkItem({
@@ -53,6 +55,8 @@ class LinkItem {
     required this.favicon,
     required this.pinned,
     required this.createdAt,
+    this.openCount = 0,
+    this.lastOpenedAt,
   });
 
   factory LinkItem.fromJson(Map<String, dynamic> j) => LinkItem(
@@ -63,6 +67,8 @@ class LinkItem {
         favicon: (j['favicon'] as String?) ?? '',
         pinned: j['pinned'] == true,
         createdAt: ((j['createdAt'] as num?) ?? 0).toInt(),
+        openCount: ((j['openCount'] as num?) ?? 0).toInt(),
+        lastOpenedAt: (j['lastOpenedAt'] as num?)?.toInt(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -73,6 +79,8 @@ class LinkItem {
         'favicon': favicon,
         'createdAt': createdAt,
         'pinned': pinned,
+        'openCount': openCount,
+        'lastOpenedAt': lastOpenedAt,
       };
 }
 

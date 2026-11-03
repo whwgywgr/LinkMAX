@@ -1,7 +1,7 @@
 {
   "name": "linkmax",
   "productName": "LinkMAX",
-  "version": "1.1.1",
+  "version": "1.4.0",
   "description": "LinkMAX - clean and simple link manager for Windows",
   "main": "main.js",
   "author": "LinkMAX",

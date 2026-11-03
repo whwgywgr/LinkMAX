@@ -15,6 +15,7 @@ Clean and simple link manager for **Windows 10/11**. Save your favorite links, o
 - **Categories & drag & drop** — group links into categories with colored dots; drag any link onto a category in the sidebar to move it. Links without a category go to *Uncategorized*.
 - **Pin / Favorite** — pin links to keep them at the top, in any sort order.
 - **Sort** — Name A→Z / Z→A / Newest first / Oldest first.
+- **Recent & Most visited** — sidebar views (Android: chips) showing links you opened lately and the ones you visit the most.
 - **Duplicate warning** — adding a URL that is already saved shows which category it lives in.
 - **Grid or List view** — switch layouts anytime; your choice is remembered.
 - **Dark mode** — toggle between light and dark themes with the moon/sun button in the toolbar; the choice is saved and the Windows title bar follows the theme.

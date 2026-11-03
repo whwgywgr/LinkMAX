@@ -2,7 +2,7 @@ name: linkmax_mobile
 description: "LinkMAX — clean and simple link manager for Android."
 publish_to: 'none'
 
-version: 1.3.0+3
+version: 1.4.0+4
 
 environment:
   sdk: ^3.13.7

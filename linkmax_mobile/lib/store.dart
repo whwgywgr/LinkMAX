@@ -201,6 +201,19 @@ class LinkStore extends ChangeNotifier {
           .toList();
     } else if (categoryFilter == 'none') {
       out = out.where((l) => categoryById(l.categoryId) == null).toList();
+    } else if (categoryFilter == 'recent') {
+      out = out.where((l) => l.lastOpenedAt != null).toList();
+      out.sort((a, b) =>
+          (b.lastOpenedAt ?? 0).compareTo(a.lastOpenedAt ?? 0));
+      return out;
+    } else if (categoryFilter == 'most') {
+      out = out.where((l) => l.openCount > 0).toList();
+      out.sort((a, b) {
+        final byOpens = b.openCount.compareTo(a.openCount);
+        if (byOpens != 0) return byOpens;
+        return (b.lastOpenedAt ?? 0).compareTo(a.lastOpenedAt ?? 0);
+      });
+      return out;
     } else if (categoryFilter != 'all') {
       out = out.where((l) => l.categoryId == categoryFilter).toList();
     }
@@ -220,6 +233,23 @@ class LinkStore extends ChangeNotifier {
       }
     });
     return out;
+  }
+
+  void recordOpen(LinkItem link) {
+    link.openCount += 1;
+    link.lastOpenedAt = DateTime.now().millisecondsSinceEpoch;
+    _persist();
+    notifyListeners();
+  }
+
+  int countForSmart(String key) {
+    if (key == 'recent') {
+      return links.where((l) => l.lastOpenedAt != null).length;
+    }
+    if (key == 'most') {
+      return links.where((l) => l.openCount > 0).length;
+    }
+    return 0;
   }
 
   int countFor(String? categoryId) {

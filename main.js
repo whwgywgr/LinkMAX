@@ -93,7 +93,9 @@ function normalizeData(data) {
           categoryId: typeof l.categoryId === 'string' && l.categoryId ? l.categoryId : null,
           favicon: typeof l.favicon === 'string' && l.favicon ? l.favicon : '',
           createdAt: Number(l.createdAt) || Date.now(),
-          pinned: l.pinned === true
+          pinned: l.pinned === true,
+          openCount: Number(l.openCount) || 0,
+          lastOpenedAt: Number(l.lastOpenedAt) || null
         }));
     }
     if (data.settings && typeof data.settings === 'object') {

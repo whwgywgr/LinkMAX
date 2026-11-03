@@ -130,7 +130,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _resetCatIfGone() {
-    if (_cat != 'all' && _cat != 'none' && store.categoryById(_cat) == null) {
+    const fixedViews = ['all', 'none', 'recent', 'most'];
+    if (!fixedViews.contains(_cat) && store.categoryById(_cat) == null) {
       _cat = 'all';
     }
   }
@@ -142,6 +143,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _snack('This link cannot be opened');
       return;
     }
+    store.recordOpen(link);
     final ok = await launchUrl(uri, mode: LaunchMode.externalApplication);
     if (!ok) _snack('Could not open this link');
   }
@@ -505,6 +507,32 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             chip('all', Text('All Links', style: chipText(_cat == 'all')), store.links.length),
             const SizedBox(width: 8),
+            chip(
+              'recent',
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.history, size: 15, color: chipText(_cat == 'recent').color),
+                  const SizedBox(width: 6),
+                  Text('Recent', style: chipText(_cat == 'recent')),
+                ],
+              ),
+              store.countForSmart('recent'),
+            ),
+            const SizedBox(width: 8),
+            chip(
+              'most',
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.trending_up, size: 15, color: chipText(_cat == 'most').color),
+                  const SizedBox(width: 6),
+                  Text('Most visited', style: chipText(_cat == 'most')),
+                ],
+              ),
+              store.countForSmart('most'),
+            ),
+            const SizedBox(width: 8),
             for (final cat in store.categories) ...[
               chip(
                 cat.id,
@@ -578,6 +606,12 @@ class _HomeScreenState extends State<HomeScreen> {
     if (q.isNotEmpty) {
       heading = 'No results';
       sub = 'No links match "$q".';
+    } else if (_cat == 'recent') {
+      heading = 'Nothing opened yet';
+      sub = 'Links you open will show up here, newest first.';
+    } else if (_cat == 'most') {
+      heading = 'No visits yet';
+      sub = 'Open your links to see which ones you visit the most.';
     } else if (_cat == 'none') {
       heading = 'Nothing uncategorized';
       sub = 'Every link has a category. Nice and tidy.';

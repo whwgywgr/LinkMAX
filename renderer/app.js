@@ -27,6 +27,8 @@ const I = {
   moon: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>',
   sun: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.5M12 19.5V22M4.9 4.9l1.8 1.8M17.3 17.3l1.8 1.8M2 12h2.5M19.5 12H22M4.9 19.1l1.8-1.8M17.3 6.7l1.8-1.8"/></svg>',
   pin: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>',
+  history: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>',
+  trending: '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>',
   pinFilled: '<svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 17v5"/><path d="M9 10.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24V16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a2 2 0 0 0 0-4H8a2 2 0 0 0 0 4h1z"/></svg>'
 };
 
@@ -363,6 +365,36 @@ function renderSidebar() {
   const linkCount = state.links.length;
   $('#navAllCount').textContent = linkCount;
 
+  document
+    .querySelectorAll('.nav-item[data-cat="recent"], .nav-item[data-cat="most"]')
+    .forEach((n) => n.remove());
+
+  const recentCount = state.links.filter((l) => l.lastOpenedAt).length;
+  const mostCount = state.links.filter((l) => (l.openCount || 0) > 0).length;
+  const recentItem = el(
+    'button',
+    {
+      class: 'nav-item' + (ui.currentCategory === 'recent' ? ' active' : ''),
+      'data-cat': 'recent',
+      onclick: () => selectCategory('recent')
+    },
+    el('span', { class: 'nav-ico', html: I.history }),
+    el('span', { class: 'grow' }, 'Recent'),
+    el('span', { class: 'nav-count', text: String(recentCount) })
+  );
+  const mostItem = el(
+    'button',
+    {
+      class: 'nav-item' + (ui.currentCategory === 'most' ? ' active' : ''),
+      'data-cat': 'most',
+      onclick: () => selectCategory('most')
+    },
+    el('span', { class: 'nav-ico', html: I.trending }),
+    el('span', { class: 'grow' }, 'Most visited'),
+    el('span', { class: 'nav-count', text: String(mostCount) })
+  );
+  $('#navAll').after(recentItem, mostItem);
+
   const list = $('#categoryList');
   list.replaceChildren();
 
@@ -419,6 +451,8 @@ function selectCategory(id) {
 function currentCategoryName() {
   if (ui.currentCategory === 'all') return 'All Links';
   if (ui.currentCategory === 'none') return 'Uncategorized';
+  if (ui.currentCategory === 'recent') return 'Recently opened';
+  if (ui.currentCategory === 'most') return 'Most visited';
   const cat = findCategory(ui.currentCategory);
   return cat ? cat.name : 'All Links';
 }
@@ -436,6 +470,18 @@ function visibleLinks() {
     );
   } else if (ui.currentCategory === 'none') {
     links = links.filter((l) => !l.categoryId || !findCategory(l.categoryId));
+  } else if (ui.currentCategory === 'recent') {
+    links = links.filter((l) => l.lastOpenedAt);
+    links.sort((a, b) => (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0));
+    return links;
+  } else if (ui.currentCategory === 'most') {
+    links = links.filter((l) => (l.openCount || 0) > 0);
+    links.sort(
+      (a, b) =>
+        (b.openCount || 0) - (a.openCount || 0) ||
+        (b.lastOpenedAt || 0) - (a.lastOpenedAt || 0)
+    );
+    return links;
   } else if (ui.currentCategory !== 'all') {
     links = links.filter((l) => l.categoryId === ui.currentCategory);
   }
@@ -598,6 +644,12 @@ function emptyState() {
   if (q) {
     heading = 'No results';
     sub = 'No links match "' + q + '". Try a different search.';
+  } else if (ui.currentCategory === 'recent') {
+    heading = 'Nothing opened yet';
+    sub = 'Links you open will show up here, newest first.';
+  } else if (ui.currentCategory === 'most') {
+    heading = 'No visits yet';
+    sub = 'Open your links to see which ones you visit the most.';
   } else if (ui.currentCategory === 'none') {
     heading = 'Nothing uncategorized';
     sub = 'Every link has a category. Nice and tidy.';
@@ -704,6 +756,10 @@ function categoryChip(cat) {
 
 function openLink(link) {
   const url = normalizeUrl(link.url);
+  link.openCount = (link.openCount || 0) + 1;
+  link.lastOpenedAt = Date.now();
+  persist();
+  renderAll();
   bridge.openLink(url).then((ok) => {
     if (!ok) toast('Could not open this link');
   });
